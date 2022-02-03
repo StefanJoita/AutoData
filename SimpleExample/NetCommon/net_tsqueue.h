@@ -1,4 +1,5 @@
-#pragma once 
+#pragma once
+
 #include "net_common.h"
 
 namespace olc
@@ -12,63 +13,32 @@ namespace olc
 			tsqueue() = default;
 			tsqueue(const tsqueue<T>&) = delete;
 			virtual ~tsqueue() { clear(); }
+
 		public:
-			//Return and maintains item at front of Queue
+			// Returns and maintains item at front of Queue
 			const T& front()
 			{
 				std::scoped_lock lock(muxQueue);
 				return deqQueue.front();
 			}
-			//returns and maintains item at the back of the queue
+
+			// Returns and maintains item at back of Queue
 			const T& back()
 			{
 				std::scoped_lock lock(muxQueue);
 				return deqQueue.back();
 			}
-			//adds an item to back of  the queue
-			void push_back(const T& item)
-			{
-				std::scoped_lock lock(maxQueue);
-				deqQueue.emplace_back(std::move(item));
-			}
-			//adds item to the front of queue
-			void push_front(const T& item)
-			{
-				std::scoped_lock lock(muxQueue);
-				deqQueue.emplace_front(std::move(item));
-			}
-			
-			//return true if queue has no items
-			bool empty()
-			{
-				std::scoped_lock lock(muxQueue);
-				return deqQueue.empty();
-			}
 
-			//return number of items in queue
-			size_t count()
-			{
-				std::scoped_lock lock(muxQueue);
-				return deqQueue.size();
-			}
-
-			//clears queue
-			void clear()
-			{
-				std::scoped_lock lock(muxQueue);
-				return deqQueue.clear();
-			}
-
-			//Remove and return item from front of queue
+			// Removes and returns item from front of Queue
 			T pop_front()
 			{
-				std::scoped_lock(muxQueue);
+				std::scoped_lock lock(muxQueue);
 				auto t = std::move(deqQueue.front());
 				deqQueue.pop_front();
 				return t;
 			}
 
-			//removes and return item from the back of the queue
+			// Removes and returns item from back of Queue
 			T pop_back()
 			{
 				std::scoped_lock lock(muxQueue);
@@ -77,10 +47,61 @@ namespace olc
 				return t;
 			}
 
+			// Adds an item to back of Queue
+			void push_back(const T& item)
+			{
+				std::scoped_lock lock(muxQueue);
+				deqQueue.emplace_back(std::move(item));
+
+				std::unique_lock<std::mutex> ul(muxBlocking);
+				cvBlocking.notify_one();
+			}
+
+			// Adds an item to front of Queue
+			void push_front(const T& item)
+			{
+				std::scoped_lock lock(muxQueue);
+				deqQueue.emplace_front(std::move(item));
+
+				std::unique_lock<std::mutex> ul(muxBlocking);
+				cvBlocking.notify_one();
+			}
+
+			// Returns true if Queue has no items
+			bool empty()
+			{
+				std::scoped_lock lock(muxQueue);
+				return deqQueue.empty();
+			}
+
+			// Returns number of items in Queue
+			size_t count()
+			{
+				std::scoped_lock lock(muxQueue);
+				return deqQueue.size();
+			}
+
+			// Clears Queue
+			void clear()
+			{
+				std::scoped_lock lock(muxQueue);
+				deqQueue.clear();
+			}
+
+			void wait()
+			{
+				while (empty())
+				{
+					std::unique_lock<std::mutex> ul(muxBlocking);
+					cvBlocking.wait(ul);
+				}
+			}
+
 		protected:
 			std::mutex muxQueue;
 			std::deque<T> deqQueue;
-
+			std::condition_variable cvBlocking;
+			std::mutex muxBlocking;
 		};
 	}
 }

@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9d3dbb58-bf99-4bc4-b918-8383bd8cc3cc}</ProjectGuid>
-    <RootNamespace>NetClient</RootNamespace>
+    <ProjectGuid>{edfd7b6c-a804-4ab1-af36-706fc9677675}</ProjectGuid>
+    <RootNamespace>NetServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -147,7 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SimpleClient.cpp" />
+    <ClCompile Include="SimpleServer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
